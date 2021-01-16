@@ -1,6 +1,7 @@
 #include <string>
 #include <iomanip>
 #include <algorithm>
+#include <stdlib.h>
 
 #include "PlayMode.h"
 #include "Game.h"
@@ -56,11 +57,16 @@ void Bullet::Update(float dTime)
 {
 	if (mActive)
 	{
-		mSpr.mPos.x += GC::MISSILE_SPEED * dTime;
-		if (mSpr.mPos.x > WinUtil::Get().GetClientWidth())
+		mSpr.mPos.y -= GC::MISSILE_SPEED * dTime;
+		if (mSpr.mPos.y < 0)
 			mActive = false;
 		mSpr.GetAnim().Update(dTime);
 	}
+}
+
+void Bullet::OnCollision(GameObj* collider)
+{
+	mActive = false;
 }
 
 //****************************************************************
@@ -69,12 +75,15 @@ void Player::Update(float dTime)
 {
 	if (Game::Get().mMKIn.IsPressed(VK_SPACE) && GetClock() > mFireTimer)
 	{
-		Bullet* pM = mpMyMode->FindFirst<Bullet>(typeid(Bullet), false);
-		if (pM) {
-			pM->mActive = true;
-			pM->mSpr.mPos = Vector2(mSpr.mPos.x + mSpr.GetScreenSize().x / 2.f, mSpr.mPos.y);
-			mFireTimer = GetClock() + GC::FIRE_DELAY;
+		if (hasDoubleShot) {
+			FireBullet(10.f);
+			FireBullet(-10.f);
 		}
+		else 
+		{
+			FireBullet(0.f);
+		}
+		mFireTimer = GetClock() + GC::FIRE_DELAY;
 	}
 
 	if (mThrusting)
@@ -134,6 +143,40 @@ void Player::Update(float dTime)
 	}
 }
 
+void Player::AddScore(int amt)
+{
+	if(hasDoublePoints)
+		mScore.SetScore(mScore.GetScore() + (amt * 2));
+	else
+		mScore.SetScore(mScore.GetScore() + amt);
+}
+
+void Player::GivePowerUp(PowerUpType powerType)
+{
+	switch (powerType) {
+	case(PowerUpType::DoubleDamage): hasDoubleDamage = true;
+		break;
+	case(PowerUpType::DoubleShot): hasDoubleShot = true;
+		break;
+	case(PowerUpType::DoublePoints): hasDoublePoints = true;
+		break;
+	}
+}
+
+void Player::OnCollision(GameObj* collider)
+{
+}
+
+void Player::FireBullet(float relpos)
+{
+	Bullet* pM = mpMyMode->FindFirst<Bullet>(typeid(Bullet), false);
+	if (pM) {
+		pM->mActive = true;
+		pM->mSpr.mPos = Vector2(mSpr.mPos.x + relpos, mSpr.mPos.y - mSpr.GetScreenSize().y / 2.f);
+		pM->isDoubleDamage = hasDoubleDamage;
+	}
+}
+
 Player::Player()
 	: GameObj(Game::Get().GetD3D()),
 	mThrust(Game::Get().GetD3D())
@@ -158,7 +201,7 @@ void Player::Init()
 	mPlayArea.top = mSpr.GetScreenSize().y * 0.6f;
 	mPlayArea.right = w - mPlayArea.left;
 	mPlayArea.bottom = h * 0.85f;
-	mSpr.mPos = Vector2(mPlayArea.left + mSpr.GetScreenSize().x / 2.f, (mPlayArea.bottom - mPlayArea.top) / 2.f);
+	mSpr.mPos = Vector2(mPlayArea.left + mSpr.GetScreenSize().x / 2.f, mPlayArea.bottom);
 
 	vector<TexCache::TexData::Sprite> frames(thrustAnim, thrustAnim + sizeof(thrustAnim) / sizeof(thrustAnim[0]));
 	p = d3d.GetCache().LoadTexture(&d3d.GetDevice(), "thrust.dds", "thrust", true, &frames);
@@ -219,17 +262,49 @@ void PlayMode::InitRoids()
 		Add(a);
 	}
 }
+void PlayMode::InitPowerUps()
+{
+	vector<PowerUp*> powerups = GetGameObjects<PowerUp>();
+	assert(powerups.empty());
+	for (int i = 0; i < ROID_CACHE; ++i)
+	{
+		PowerUp* a = new PowerUp();
+		Add(a);
+	}
+}
 
 void Asteroid::Update(float dTime) {
 	if (mActive)
 	{
 		int w, h;
 		WinUtil::Get().GetClientExtents(w, h);
-		float radius = mSpr.GetScreenSize().Length() / 2.f;
 		mSpr.mPos.y += roidSpeed * dTime;
 		if (mSpr.mPos.y > h)
 			mActive = false;
 		mSpr.GetAnim().Update(dTime);
+	}
+}
+
+void Asteroid::TakeDamage(float amount)
+{
+	mHealth -= amount;
+	if (mHealth <= 0)
+		mActive = false;
+}
+
+void Asteroid::Reset()
+{
+	mHealth = 100.f;
+}
+
+void Asteroid::OnCollision(GameObj* collider)
+{
+	if (typeid(*collider) == typeid(Bullet))
+	{
+		if (dynamic_cast<Bullet*>(collider)->isDoubleDamage)
+			TakeDamage(100.f);
+		else
+			TakeDamage(50.f);
 	}
 }
 
@@ -273,14 +348,21 @@ void PlayMode::CheckCollisions()
 	for (auto& b : GetGameObjects<Bullet>()) {
 		for (auto& a : GetGameObjects<Asteroid>()) {
 			if (CheckForCollision(*a, *b)) {
-				a->mActive = false;
-				b->mActive = false;
-				FindFirst<Player>(typeid(Player), true)->mScore++;
+				a->OnCollision(b);
+				b->OnCollision(a);
+				FindFirst<Player>(typeid(Player), true)->AddScore(1);
 			}
 			if (CheckForCollision(*a, *p)) {
 				Game::Get().GetModeMgr().SwitchMode(GameOverMode::MODE_NAME);
 				Initalise();
 			}
+		}
+	}
+	for (auto& a : GetGameObjects<PowerUp>()) {
+		if (CheckForCollision(*a, *p)) {
+			FindFirst<Player>(typeid(Player), true)->GivePowerUp(a->GetType());
+			a->mActive = false;
+			
 		}
 	}
 }
@@ -306,6 +388,44 @@ Asteroid* PlayMode::SpawnRoid()
 		Vector2& pos = p->mSpr.mPos;
 		pos.y = (float)0;
 		pos.x = (float)GetRandom((0.f), (w - 20.f));
+		p->Reset();
+		p->mActive = true;
+	}
+	return p;
+}
+
+PowerUp* PlayMode::SpawnPowerUp()
+{
+	vector<PowerUp*> powerups = GetGameObjects<PowerUp>();
+	assert(!powerups.empty());
+	size_t i = 0;
+	PowerUp* p = nullptr;
+	while (i < powerups.size() && !p)
+	{
+		if (!powerups[i]->mActive)
+			p = powerups[i];
+		++i;
+	}
+
+	if (p)
+	{
+		int w, h;
+		WinUtil::Get().GetClientExtents(w, h);
+		float radius = powerups[0]->mSpr.GetScreenSize().Length() / 2.f;
+		Vector2& pos = p->mSpr.mPos;
+		pos.y = (float)0;
+		pos.x = (float)GetRandom((0.f), (w - 20.f));
+		srand(time(NULL));
+		int pwrt = rand() % 3;
+		switch (pwrt)
+		{
+		case(0): p->SetType(PowerUpType::DoubleDamage);
+			break;
+		case(1): p->SetType(PowerUpType::DoublePoints);
+			break;
+		case(2): p->SetType(PowerUpType::DoubleShot);
+			break;
+		}
 		p->mActive = true;
 	}
 	return p;
@@ -322,6 +442,8 @@ void PlayMode::UpdateRoids(float dTime)
 	if ((GetClock() - mLastSpawn) > mSpawnRateSec)
 	{
 		if (SpawnRoid())
+			mLastSpawn = GetClock();
+		if (SpawnPowerUp())
 			mLastSpawn = GetClock();
 	}
 }
@@ -373,7 +495,8 @@ PlayMode::PlayMode()
 	p->mScore.SetScore(0);
 	Add(p);
 	InitRoids();
-	for (int i = 0; i < 10; ++i)
+	InitPowerUps();
+	for (int i = 0; i < 30; ++i)
 		Add(new Bullet(Game::Get().GetD3D()));
 	Coin *c = new Coin();
 	c->GetPlayerPointer(p);
@@ -490,3 +613,45 @@ ObjectType* PlayMode::FindFirst(const std::type_info& type, bool active) {
 	return dynamic_cast<ObjectType*>(mObjects[i]);
 }
 
+PowerUp::PowerUp()
+	: GameObj(Game::Get().GetD3D()), pwrut(PowerUpType::DoubleDamage)
+{
+	MyD3D& d3d = Game::Get().GetD3D();
+	vector<TexCache::TexData::Sprite> frames(coinSpin, coinSpin + sizeof(coinSpin) / sizeof(coinSpin[0]));
+	ID3D11ShaderResourceView* p = d3d.GetCache().LoadTexture(&d3d.GetDevice(), "coin.dds", "coin", true, &frames);
+	mSpr.SetTex(*p);
+	mSpr.SetScale(Vector2(2, 2));
+	mSpr.GetAnim().Init(0, 7, 15, true);
+	int w, h;
+	WinUtil::Get().GetClientExtents(w, h);
+	mSpr.mPos = Vector2(w * 0.8f, h * 0.85f);
+	mSpr.GetAnim().Play(true);
+}
+
+void PowerUp::Render(float dTime, DirectX::SpriteBatch& batch)
+{
+	GameObj::Render(dTime, batch);
+}
+
+void PowerUp::Update(float dTime)
+{
+	if (mActive)
+	{
+		int w, h;
+		WinUtil::Get().GetClientExtents(w, h);
+		mSpr.mPos.y += 100.f * dTime;
+		if (mSpr.mPos.y > h)
+			mActive = false;
+		mSpr.GetAnim().Update(dTime);
+	}
+}
+
+void PowerUp::SetType(PowerUpType type)
+{
+	pwrut = type;
+}
+
+PowerUpType PowerUp::GetType()
+{
+	return(pwrut);
+}

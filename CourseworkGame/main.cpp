@@ -53,11 +53,11 @@ LRESULT CALLBACK MainWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE prevInstance,
 				   PSTR cmdLine, int showCmd)
 {
-	int w(512), h(256);
+	int w(1024), h(768);
 	//int defaults[] = { 640,480, 800,600, 1024,768, 1280,1024 };
 		//WinUtil::ChooseRes(w, h, defaults, 4);
 	new WinUtil();
-	if (!WinUtil::Get().InitMainWindow(w, h, hInstance, "Schmup Savagery", MainWndProc, true))
+	if (!WinUtil::Get().InitMainWindow(w, h, hInstance, "CourseworkGame", MainWndProc, true))
 		assert(false);
 	MyD3D d3d;
 	if (!d3d.InitDirect3D(OnResize))

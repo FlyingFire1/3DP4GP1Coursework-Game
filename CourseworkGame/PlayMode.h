@@ -10,7 +10,7 @@
 #include "ModeMgr.h"
 #include "GameObj.h"
 
-
+enum class PowerUpType { DoubleShot, DoublePoints, DoubleDamage };
 
 /*
 Animated missile bullet
@@ -19,9 +19,10 @@ It goes to sleep when it leaves the screen
 class Bullet : public GameObj
 {
 public:
-
 	Bullet(MyD3D& d3d);
 	void Update(float dTime) override;
+	bool isDoubleDamage = false;
+	void OnCollision(GameObj* collider) override;
 };
 
 class PlayMode;
@@ -53,8 +54,11 @@ public:
 		mpMyMode = &pm;
 	}
 	Score mScore;					//The player's score they get from 'roids
-
+	void AddScore(int amt);
+	void GivePowerUp(PowerUpType powerType);
+	void OnCollision(GameObj* collider) override;
 private:
+	void FireBullet(float relpos);
 	Sprite mThrust;					//flames out the back
 	//once we start thrusting we have to keep doing it for 
 	//at least a fraction of a second or it looks whack
@@ -62,6 +66,9 @@ private:
 	RECTF mPlayArea;				//where can I move?
 	PlayMode *mpMyMode = nullptr;	//my mode owner
 	float mFireTimer = 0;			//time limit on firing
+	bool hasDoubleShot = false;
+	bool hasDoubleDamage = false;
+	bool hasDoublePoints = false;
 	
 	void Init();
 };
@@ -77,7 +84,11 @@ public:
 	//Render from GameObj
 	//Move left until offscreen, then go inactive
 	void Update(float dTime) override;
+	void OnCollision(GameObj* collider) override;
+	void TakeDamage(float amount);
+	void Reset();
 private:
+	float mHealth = 100.0f;
 	const float roidSpeed = 100.f;
 };
 
@@ -96,6 +107,21 @@ private:
 	DirectX::SpriteFont *mpFont = nullptr;	//Font for the text to be rendered in
 	Player* mpPlayer = nullptr;				//Pointer to the player so we can get his score
 };
+
+/*Pickupable PowerUp*/
+class PowerUp : public GameObj
+{
+public:
+	PowerUp();
+	void Render(float dTime, DirectX::SpriteBatch& batch) override;
+	void Update(float dTime) override;
+	void SetType(PowerUpType type);
+	PowerUpType GetType();
+private:
+	PowerUpType pwrut;
+};
+
+
 
 //horizontal scrolling with player controlled ship
 class PlayMode : public AMode
@@ -141,12 +167,15 @@ private:
 
 	//create a cache of roids to use and re-use
 	void InitRoids();
+	//Create a cache of powerups to use and re-use
+	void InitPowerUps();
 	//Search through the mObjects to find all of the specified type in existence
 	template<class ObjectType>
 	std::vector<ObjectType*> GetGameObjects();
-	/* Try to make one just off screen to the right that definitely
-	isn't touching anything else.*/
+	/* Spawns an Asteroid and only.*/
 	Asteroid* SpawnRoid();
+	/* Spawn a powerup, simular to SpawnRoid() */
+	PowerUp* SpawnPowerUp();
 	/* Give each active roid an update and monitor the spawn delay
 	creating new roids as needed */
 	void UpdateRoids(float dTime);

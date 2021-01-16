@@ -16,6 +16,7 @@ public:
 		if(mActive)
 			mSpr.Draw(batch);
 	}
+	virtual void OnCollision(GameObj* collided){};
 
 	Sprite mSpr;			//main sprite
 	bool mActive = false;	//by default its asleep and should not render or update
