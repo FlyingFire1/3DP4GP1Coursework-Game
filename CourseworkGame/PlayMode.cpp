@@ -86,13 +86,48 @@ void Player::Update(float dTime)
 		mFireTimer = GetClock() + GC::FIRE_DELAY;
 	}
 
+	//Reset Double Damage PowerUp
+	if (GetClock() > mDDTimer)
+	{
+		hasDoubleDamage = false;
+	}
+	//Reset Double Shot PowerUp
+	if (GetClock() > mDSTimer)
+	{
+		hasDoubleShot = false;
+	}
+	//Reset Double Points PowerUp
+	if (GetClock() > mDPTimer)
+	{
+		hasDoublePoints = false;
+	}
+
 	if (mThrusting)
 	{
 		mThrust.mPos = mSpr.mPos;
-		mThrust.mPos.x -= 25;
-		mThrust.mPos.y -= 12;
+		mThrust.mPos.x -= 12;
+		mThrust.mPos.y += 24;
 		mThrust.SetScale(Vector2(1.5f, 1.5f));
 		mThrust.GetAnim().Update(dTime);
+	}
+
+	//PowerUp Light Sprites
+	if (hasDoubleDamage)
+	{
+		mRedLight.mPos = mSpr.mPos;
+		mRedLight.mPos.x -= 2.5;
+	}
+	if (hasDoublePoints)
+	{
+		mBlueLight.mPos = mSpr.mPos;
+		mBlueLight.mPos.x -= 2.5;
+		mBlueLight.mPos.y += 8;
+	}
+	if (hasDoubleShot)
+	{
+		mGreenLight.mPos = mSpr.mPos;
+		mGreenLight.mPos.x -= 2.5;
+		mGreenLight.mPos.y += 16;
 	}
 
 
@@ -155,10 +190,13 @@ void Player::GivePowerUp(PowerUpType powerType)
 {
 	switch (powerType) {
 	case(PowerUpType::DoubleDamage): hasDoubleDamage = true;
+		mDDTimer = GetClock() + GC::POWERUP_TIME;
 		break;
 	case(PowerUpType::DoubleShot): hasDoubleShot = true;
+		mDSTimer = GetClock() + GC::POWERUP_TIME;
 		break;
 	case(PowerUpType::DoublePoints): hasDoublePoints = true;
+		mDPTimer = GetClock() + GC::POWERUP_TIME;
 		break;
 	}
 }
@@ -167,11 +205,20 @@ void Player::OnCollision(GameObj* collider)
 {
 }
 
+void Player::Reset()
+{
+	hasDoubleShot = false;
+	hasDoubleDamage = false;
+	hasDoublePoints = false;
+}
+
+//Fire bullet from player
 void Player::FireBullet(float relpos)
 {
 	Bullet* pM = mpMyMode->FindFirst<Bullet>(typeid(Bullet), false);
 	if (pM) {
 		pM->mActive = true;
+		pM->mSpr.rotation = PI / 2.f;
 		pM->mSpr.mPos = Vector2(mSpr.mPos.x + relpos, mSpr.mPos.y - mSpr.GetScreenSize().y / 2.f);
 		pM->isDoubleDamage = hasDoubleDamage;
 	}
@@ -179,7 +226,10 @@ void Player::FireBullet(float relpos)
 
 Player::Player()
 	: GameObj(Game::Get().GetD3D()),
-	mThrust(Game::Get().GetD3D())
+	mThrust(Game::Get().GetD3D()),
+	mRedLight(Game::Get().GetD3D()),
+	mBlueLight(Game::Get().GetD3D()),
+	mGreenLight(Game::Get().GetD3D())
 {
 	Init();
 }
@@ -192,7 +242,7 @@ void Player::Init()
 	mSpr.SetTex(*p);
 	mSpr.SetScale(Vector2(0.1f, 0.1f));
 	mSpr.origin = mSpr.GetTexData().dim / 2.f;
-	mSpr.rotation = PI / 2.f;
+	mSpr.rotation = 0;
 
 	//setup the play area
 	int w, h;
@@ -208,7 +258,17 @@ void Player::Init()
 	mThrust.SetTex(*p);
 	mThrust.GetAnim().Init(0, 3, 15, true);
 	mThrust.GetAnim().Play(true);
-	mThrust.rotation = PI / 2.f;
+	mThrust.rotation = 0;
+
+	p = p = d3d.GetCache().LoadTexture(&d3d.GetDevice(), "redlight.dds");
+	mRedLight.SetTex(*p);
+	mRedLight.SetScale(Vector2(0.1, 0.1));
+	p = p = d3d.GetCache().LoadTexture(&d3d.GetDevice(), "greenlight.dds", "greenlight");
+	mGreenLight.SetTex(*p);
+	mGreenLight.SetScale(Vector2(0.1, 0.1));
+	p = p = d3d.GetCache().LoadTexture(&d3d.GetDevice(), "bluelight.dds", "bluelight");
+	mBlueLight.SetTex(*p);
+	mBlueLight.SetScale(Vector2(0.1, 0.1));
 }
 
 void Player::Render(float dTime, SpriteBatch& batch)
@@ -216,6 +276,12 @@ void Player::Render(float dTime, SpriteBatch& batch)
 	if (mThrusting > GetClock())
 		mThrust.Draw(batch);
 	GameObj::Render(dTime, batch);
+	if (hasDoubleDamage)
+		mRedLight.Draw(batch);
+	if (hasDoublePoints)
+		mBlueLight.Draw(batch);
+	if (hasDoubleShot)
+		mGreenLight.Draw(batch);
 }
 
 Asteroid::Asteroid()
@@ -266,7 +332,7 @@ void PlayMode::InitPowerUps()
 {
 	vector<PowerUp*> powerups = GetGameObjects<PowerUp>();
 	assert(powerups.empty());
-	for (int i = 0; i < ROID_CACHE; ++i)
+	for (int i = 0; i < POWERUP_CACHE; ++i)
 	{
 		PowerUp* a = new PowerUp();
 		Add(a);
@@ -439,12 +505,21 @@ void PlayMode::UpdateRoids(float dTime)
 		a->Update(dTime);
 	}
 
-	if ((GetClock() - mLastSpawn) > mSpawnRateSec)
+	if ((GetClock() - mLastSpawnAsteroid) > mSpawnRateSecAsteroid)
 	{
 		if (SpawnRoid())
-			mLastSpawn = GetClock();
+			mLastSpawnAsteroid = GetClock();
+
+		//Increase Difficulty gradually by spawning more asteroids as time goes on
+		if (!((mSpawnRateSecAsteroid - 0.05f) < 0.2f))
+			mSpawnRateSecAsteroid -= 0.005f;
+		else
+			mSpawnRateSecAsteroid = 0.2f;
+	}
+	if ((GetClock() - mLastSpawnPowerUp) > mSpawnRateSecPowerUp)
+	{
 		if (SpawnPowerUp())
-			mLastSpawn = GetClock();
+			mLastSpawnPowerUp = GetClock();
 	}
 }
 
@@ -515,6 +590,9 @@ void PlayMode::Initalise()
 {
 	FindFirst<Player>(typeid(Player), true)->mSpr.mPos = Vector2(53.f, 98.f);
 	FindFirst<Player>(typeid(Player), true)->mScore.SetScore(0);
+	FindFirst<Player>(typeid(Player), true)->Reset();
+
+	mSpawnRateSecAsteroid = 1.f;
 	//Skip the first item which is the player
 	for (size_t i = 1; i < mObjects.size(); ++i)
 		mObjects[i]->mActive = false;
@@ -526,7 +604,7 @@ void PlayMode::UpdateBgnd(float dTime)
 	//scroll the background layers
 	int i = 0;
 	for (auto& s : mBgnd)
-		s.Scroll(dTime*(i++)*GC::SCROLL_SPEED, 0);
+		s.Scroll((dTime * (i) * GC::SCROLL_SPEED) / 2, dTime * (i++) * GC::SCROLL_SPEED);
 }
 
 void PlayMode::Update(float dTime)
@@ -558,14 +636,9 @@ void PlayMode::InitBgnd()
 
 	//a neat way to package pairs of things (nicknames and filenames)
 	pair<string, string> files[GC::BGND_LAYERS]{
-		{ "bgnd0","backgroundlayers/mountains01_007.dds" },
-		{ "bgnd1","backgroundlayers/mountains01_005.dds" },
-		{ "bgnd2","backgroundlayers/mountains01_004.dds" },
-		{ "bgnd3","backgroundlayers/mountains01_003.dds" },
-		{ "bgnd4","backgroundlayers/mountains01_002.dds" },
-		{ "bgnd5","backgroundlayers/mountains01_001.dds" },
-		{ "bgnd6","backgroundlayers/mountains01_000.dds" },
-		{ "bgnd7","backgroundlayers/mountains01_006.dds" }
+		{ "bgnd0","backgroundlayers/nebulabackground_00.dds" },
+		{ "bgnd1","backgroundlayers/nebulabackground_01.dds" },
+		{ "bgnd2","backgroundlayers/nebulabackground_02.dds" }
 	};
 	int i = 0;
 	for (auto& f : files)
@@ -574,7 +647,10 @@ void PlayMode::InitBgnd()
 		ID3D11ShaderResourceView *p = Game::Get().GetD3D().GetCache().LoadTexture(&Game::Get().GetD3D().GetDevice(), f.second, f.first);
 		if (!p)
 			assert(false);
-		mBgnd[i++].SetTex(*p);
+		mBgnd[i].SetTex(*p);
+		//Scale background to screen
+		mBgnd[i].SetScale(Vector2(WinUtil::Get().GetClientWidth() / mBgnd[i].GetTexData().dim.x, WinUtil::Get().GetClientHeight() / mBgnd[i].GetTexData().dim.y));
+		i++;
 	}
 
 }

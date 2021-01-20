@@ -57,15 +57,29 @@ public:
 	void AddScore(int amt);
 	void GivePowerUp(PowerUpType powerType);
 	void OnCollision(GameObj* collider) override;
+	void Reset();
 private:
 	void FireBullet(float relpos);
 	Sprite mThrust;					//flames out the back
-	//once we start thrusting we have to keep doing it for 
-	//at least a fraction of a second or it looks whack
-	float mThrusting = 0;
-	RECTF mPlayArea;				//where can I move?
+
+	//Lights for powerups
+	Sprite mRedLight;
+	Sprite mGreenLight;
+	Sprite mBlueLight;
+
+
+
+	float mThrusting = 0;			//the clock used for the thrusting sprite.
+	RECTF mPlayArea;				//the area to keep the player in
 	PlayMode *mpMyMode = nullptr;	//my mode owner
 	float mFireTimer = 0;			//time limit on firing
+
+	//powerup time limits
+	float mDSTimer = 0;
+	float mDDTimer = 0;
+	float mDPTimer = 0;
+
+	//powerup bools
 	bool hasDoubleShot = false;
 	bool hasDoubleDamage = false;
 	bool hasDoublePoints = false;
@@ -73,7 +87,7 @@ private:
 	void Init();
 };
 
-//The animated roids players need to avoid or shoot
+//A gameobject ASteroid
 class Asteroid : public GameObj
 {
 public:
@@ -108,7 +122,7 @@ private:
 	Player* mpPlayer = nullptr;				//Pointer to the player so we can get his score
 };
 
-/*Pickupable PowerUp*/
+//Pickupable PowerUp
 class PowerUp : public GameObj
 {
 public:
@@ -123,7 +137,7 @@ private:
 
 
 
-//horizontal scrolling with player controlled ship
+//vertical scrolling with player controlled ship
 class PlayMode : public AMode
 {
 public:
@@ -156,9 +170,12 @@ private:
 	std::vector<Sprite> mBgnd;		//parallax layers
 	std::vector<GameObj*> mObjects;	//objects needing update/render
 
-	float mSpawnRateSec = 1.f;	//how fast to spawn in new asteroids
-	float mLastSpawn = 0;		//used in spawn timing
-	const int ROID_CACHE = 32;	//The max amount of Asteroids stored in memory
+	float mSpawnRateSecAsteroid = 1.f;	//how fast asteroids spawn in seconds
+	float mSpawnRateSecPowerUp = 3.f; // how fast powerups spawn in seconds
+	float mLastSpawnAsteroid = 0;	//used in spawning asteroids
+	float mLastSpawnPowerUp = 0; //used in spawning powerups
+	const int ROID_CACHE = 128;	//The max amount of Asteroids stored in memory
+	const int POWERUP_CACHE = 4;//The max amount of Powerups stored in memory
 
 	//setup once
 	void InitBgnd();

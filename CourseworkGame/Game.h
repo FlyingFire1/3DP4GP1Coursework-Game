@@ -19,9 +19,10 @@ namespace GC {
 	const float MOUSE_SPEED = 5000.f;
 	const float PAD_SPEED = 500.f;
 	const float FIRE_DELAY = 0.25f;
+	const float POWERUP_TIME = 5.f;
 	const float MISSILE_SPEED = 300.f;
-	const float SCROLL_SPEED = 10.f;
-	const int BGND_LAYERS = 8;
+	const float SCROLL_SPEED = 5.f;
+	const int BGND_LAYERS = 3;
 };
 
 //start of the game
