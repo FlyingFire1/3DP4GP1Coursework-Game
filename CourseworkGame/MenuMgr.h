@@ -12,6 +12,7 @@
 namespace DirectX { class SpriteBatch; }
 namespace DirectX { class SpriteFont; }
 class MouseAndKeys;
+class Gamepads;
 class MenuMgr;
 class MenuPage;
 
@@ -20,12 +21,13 @@ General information menu nodes might need access to, saves passing it as lots of
 */
 struct ExtraData
 {
-	ExtraData(float _dTime, DirectX::SpriteBatch& _spriteBatch, TexCache& _texCache, MouseAndKeys& _mouseAndKeys, MenuMgr& _menuMgr)
-		: dTime(_dTime), spriteBatch(_spriteBatch), texCache(_texCache), mouseAndKeys(_mouseAndKeys), menuMgr(_menuMgr) {};
+	ExtraData(float _dTime, DirectX::SpriteBatch& _spriteBatch, TexCache& _texCache, MouseAndKeys& _mouseAndKeys, Gamepads& _gamepads, MenuMgr& _menuMgr)
+		: dTime(_dTime), spriteBatch(_spriteBatch), texCache(_texCache), mouseAndKeys(_mouseAndKeys), gamepads(_gamepads), menuMgr(_menuMgr) {};
 	float dTime;
 	DirectX::SpriteBatch& spriteBatch;
 	TexCache& texCache;
 	MouseAndKeys& mouseAndKeys;
+	Gamepads& gamepads;
 	MenuMgr& menuMgr;
 };
 
@@ -153,8 +155,9 @@ public:
 	spriteBatch - for sprite rendering
 	texCache - textures will be needed
 	mouseAndKeys - input may be necessary
+	GamePads - input for gamepads
 	*/
-	void Render(float dTime, DirectX::SpriteBatch& spriteBatch, TexCache& texCache, MouseAndKeys& mouseAndKeys);
+	void Render(float dTime, DirectX::SpriteBatch& spriteBatch, TexCache& texCache, MouseAndKeys& mouseAndKeys, Gamepads& gamepads);
 
 	//when something happens on a menu we need to be able to trigger code to run
 	class Handler {

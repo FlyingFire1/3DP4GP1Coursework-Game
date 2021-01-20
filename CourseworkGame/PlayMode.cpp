@@ -73,7 +73,9 @@ void Bullet::OnCollision(GameObj* collider)
 
 void Player::Update(float dTime)
 {
-	if (Game::Get().mMKIn.IsPressed(VK_SPACE) && GetClock() > mFireTimer)
+
+	Game& gm = Game::Get();
+	if ((gm.mMKIn.IsPressed(VK_SPACE) || (gm.mGamepads.IsConnected(0) && gm.mGamepads.GetState(0).rightTrigger > 0)) && GetClock() > mFireTimer)
 	{
 		if (hasDoubleShot) {
 			FireBullet(10.f);
@@ -131,7 +133,6 @@ void Player::Update(float dTime)
 	}
 
 
-	Game& gm = Game::Get();
 	Vector2 mouse{ gm.mMKIn.GetMousePos(false) };
 	bool keypressed = gm.mMKIn.IsPressed(VK_UP) || gm.mMKIn.IsPressed(VK_DOWN) ||
 		gm.mMKIn.IsPressed(VK_RIGHT) || gm.mMKIn.IsPressed(VK_LEFT);

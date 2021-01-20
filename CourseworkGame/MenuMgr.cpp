@@ -206,14 +206,14 @@ MenuNode &MenuMgr::FindNode(const string& menuName, const string& nodeName)
 	return *pN;
 }
 
-void MenuMgr::Render(float dTime, SpriteBatch& spriteBatch, TexCache& texCache, MouseAndKeys& mouseAndKeys) {
+void MenuMgr::Render(float dTime, SpriteBatch& spriteBatch, TexCache& texCache, MouseAndKeys& mouseAndKeys, Gamepads& gamepads) {
 	if (!mpActiveMenu)
 		return;
 	Vector2 offset{ 0,0 };
 	int sw, sh;
 	WinUtil::Get().GetClientExtents(sw, sh);
 	Vector2 scale{ (float)sw / mpActiveMenu->mW, (float)sh / mpActiveMenu->mH };
-	ExtraData rd(dTime, spriteBatch, texCache, mouseAndKeys, *this);
+	ExtraData rd(dTime, spriteBatch, texCache, mouseAndKeys, gamepads, *this);
 	mpActiveMenu->Render(rd, offset, scale);
 }
 

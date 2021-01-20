@@ -29,8 +29,8 @@ void MenuButton::Render(const ExtraData& rdata, const Vector2& offset, const Vec
 
 	//what is the mouse doing?
 	Vector2 spos = rdata.mouseAndKeys.GetMousePos(true);
-	bool over = (spos.x >= dest.left && spos.x <= dest.right && spos.y >= dest.top && spos.y <= dest.bottom);
-	if (over && rdata.mouseAndKeys.GetMouseButton(MouseAndKeys::ButtonT::LBUTTON))
+	bool over = (spos.x >= dest.left && spos.x <= dest.right && spos.y >= dest.top && spos.y <= dest.bottom) || gOver;
+	if (over && (rdata.mouseAndKeys.GetMouseButton(MouseAndKeys::ButtonT::LBUTTON) || rdata.gamepads.IsPressed(0, XINPUT_GAMEPAD_A)))
 	{
 		//pressed
 		rdata.texCache.Render(rdata.spriteBatch, buttons[PRESSED].textureName, dest, buttons[PRESSED].spriteID, buttons[PRESSED].colour);

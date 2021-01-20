@@ -51,7 +51,7 @@ void Game::Render(float dTime)
 	CommonStates dxstate(&mD3D.GetDevice());
 	mpSB->Begin(SpriteSortMode_Deferred, dxstate.NonPremultiplied(), &mD3D.GetWrapSampler());
 	mModeMgr.Render(dTime, *mpSB);
-	mMenuMgr.Render(dTime, *mpSB, mD3D.GetCache(), mMKIn);
+	mMenuMgr.Render(dTime, *mpSB, mD3D.GetCache(), mMKIn, mGamepads);
 	mpSB->End();
 
 
@@ -98,7 +98,22 @@ IntroMode::IntroMode()
 }
 void IntroMode::Update(float dTime)
 {
-
+	MenuMgr& mgr = Game::Get().GetMenuMgr();
+	if (Game::Get().mGamepads.IsPressed(0, XINPUT_GAMEPAD_DPAD_DOWN))
+	{
+		MenuButton* quit = dynamic_cast<MenuButton*>(&mgr.FindNode("Intro", "quit button"));
+		MenuButton* start = dynamic_cast<MenuButton*>(&mgr.FindNode("Intro", "start button"));
+		if (start->gOver)
+		{
+			start->gOver = false;
+			quit->gOver = true;
+		}
+		else
+		{
+			start->gOver = true;
+			quit->gOver = false;
+		}
+	}
 }
 
 void IntroMode::Render(float dTime, DirectX::SpriteBatch& batch)

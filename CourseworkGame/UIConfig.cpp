@@ -36,6 +36,7 @@ void BuildTwoButtonUI(MenuMgr& mgr, MenuNode& root, float x, float y, const stri
 	pB->buttons[MenuButton::PRESSED].textureName = "data/blueSheet.dds";
 	pB->buttons[MenuButton::PRESSED].colour = Vector4(0.95f, 0.95f, 0.95f, 1);
 	pB->mName = b1Name;
+	pB->gOver = true;
 	pB->mX = 20;
 	pB->mY = 20;
 	pB->mW = 75;

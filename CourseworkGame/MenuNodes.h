@@ -36,7 +36,7 @@ public:
 		DirectX::SimpleMath::Vector4 colour{1,1,1,1};
 	}buttons[3];
 	enum { PRESSED = 0, NORMAL = 1, HOVER = 2 };
-
+	bool gOver = false;
 private:
 	bool mWasDown = false;
 };

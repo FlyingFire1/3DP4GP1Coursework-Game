@@ -41,7 +41,6 @@ public:
 	void Enter() override;
 private:
 	Sprite mSpr;
-
 	void HandleUIEvent(MenuNode& node, MenuNode::Event etype);
 };
 
