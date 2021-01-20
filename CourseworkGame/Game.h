@@ -41,6 +41,8 @@ public:
 	void Enter() override;
 private:
 	Sprite mSpr;
+	float dpBlock = GetClock();
+	float dpBlockTime = 0.2f;
 	void HandleUIEvent(MenuNode& node, MenuNode::Event etype);
 };
 
@@ -60,7 +62,8 @@ public:
 	void Enter() override;
 private:
 	Sprite mSpr;
-
+	float dpBlock = GetClock();
+	float dpBlockTime = 0.2f;
 	void HandleUIEvent(MenuNode& node, MenuNode::Event etype);
 };
 

@@ -99,10 +99,13 @@ IntroMode::IntroMode()
 void IntroMode::Update(float dTime)
 {
 	MenuMgr& mgr = Game::Get().GetMenuMgr();
-	if (Game::Get().mGamepads.IsPressed(0, XINPUT_GAMEPAD_DPAD_DOWN))
+
+	if (Game::Get().mGamepads.IsPressed(0, XINPUT_GAMEPAD_DPAD_DOWN) && dpBlock < GetClock())
 	{
+		//Get Menu Button
 		MenuButton* quit = dynamic_cast<MenuButton*>(&mgr.FindNode("Intro", "quit button"));
 		MenuButton* start = dynamic_cast<MenuButton*>(&mgr.FindNode("Intro", "start button"));
+		//DPAD Logic
 		if (start->gOver)
 		{
 			start->gOver = false;
@@ -113,6 +116,25 @@ void IntroMode::Update(float dTime)
 			start->gOver = true;
 			quit->gOver = false;
 		}
+		dpBlock = GetClock() + dpBlockTime;
+	}
+	if (Game::Get().mGamepads.IsPressed(0, XINPUT_GAMEPAD_DPAD_UP) && dpBlock < GetClock())
+	{		
+		//Get Menu Button
+		MenuButton* quit = dynamic_cast<MenuButton*>(&mgr.FindNode("Intro", "quit button"));
+		MenuButton* start = dynamic_cast<MenuButton*>(&mgr.FindNode("Intro", "start button"));
+		//DPAD Logic
+		if (start->gOver)
+		{
+			start->gOver = false;
+			quit->gOver = true;
+		}
+		else
+		{
+			start->gOver = true;
+			quit->gOver = false;
+		}
+		dpBlock = GetClock() + dpBlockTime;
 	}
 }
 
@@ -176,7 +198,44 @@ GameOverMode::GameOverMode()
 }
 void GameOverMode::Update(float dTime)
 {
+	MenuMgr& mgr = Game::Get().GetMenuMgr();
 
+	if (Game::Get().mGamepads.IsPressed(0, XINPUT_GAMEPAD_DPAD_DOWN) && dpBlock < GetClock())
+	{
+		//Get Menu Button
+		MenuButton* quit = dynamic_cast<MenuButton*>(&mgr.FindNode("GameOver", "quit button"));
+		MenuButton* start = dynamic_cast<MenuButton*>(&mgr.FindNode("GameOver", "restart button"));
+		//DPAD Logic
+		if (start->gOver)
+		{
+			start->gOver = false;
+			quit->gOver = true;
+		}
+		else
+		{
+			start->gOver = true;
+			quit->gOver = false;
+		}
+		dpBlock = GetClock() + dpBlockTime;
+	}
+	if (Game::Get().mGamepads.IsPressed(0, XINPUT_GAMEPAD_DPAD_UP) && dpBlock < GetClock())
+	{
+		//Get Menu Button
+		MenuButton* quit = dynamic_cast<MenuButton*>(&mgr.FindNode("GameOver", "quit button"));
+		MenuButton* start = dynamic_cast<MenuButton*>(&mgr.FindNode("GameOver", "restart button"));
+		//DPAD Logic
+		if (start->gOver)
+		{
+			start->gOver = false;
+			quit->gOver = true;
+		}
+		else
+		{
+			start->gOver = true;
+			quit->gOver = false;
+		}
+		dpBlock = GetClock() + dpBlockTime;
+	}
 }
 
 void GameOverMode::Render(float dTime, DirectX::SpriteBatch& batch)
