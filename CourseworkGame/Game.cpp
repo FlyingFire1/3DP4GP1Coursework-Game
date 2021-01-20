@@ -157,9 +157,7 @@ void IntroMode::Update(float dTime)
 			quit->gOver = true;
 		}
 		else
-		{
 			start->gOver = true;
-		}
 		dpBlock = GetClock() + dpBlockTime;
 	}
 }

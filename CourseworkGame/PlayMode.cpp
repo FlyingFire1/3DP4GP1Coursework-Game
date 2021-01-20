@@ -725,7 +725,21 @@ void PowerUp::Update(float dTime)
 
 void PowerUp::SetType(PowerUpType type)
 {
+	MyD3D& d3d = Game::Get().GetD3D();
+	vector<TexCache::TexData::Sprite> frames(coinSpin, coinSpin + sizeof(coinSpin) / sizeof(coinSpin[0]));
 	pwrut = type;
+	switch (type) {
+
+	case(PowerUpType::DoubleDamage): 		
+		mSpr.colour = Vector4(1.f, 0.25f, 0.25f, 1.f);
+		break;
+	case(PowerUpType::DoublePoints):
+		mSpr.colour = Vector4(0.25f, 0.25f, 25.f, 1.f);
+		break;	
+	case(PowerUpType::DoubleShot):
+		mSpr.colour = Vector4(0.25f, 1.f, 0.25f, 1.f);
+		break;
+	}
 }
 
 PowerUpType PowerUp::GetType()
