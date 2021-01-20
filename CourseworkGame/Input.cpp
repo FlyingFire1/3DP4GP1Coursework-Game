@@ -63,7 +63,6 @@ void Gamepads::Initialise()
 bool Gamepads::IsPressed(int idx, unsigned short buttonId)
 {
 	assert(idx >= 0 && idx < XUSER_MAX_COUNT);
-	assert(mPads[idx].port != -1);
 	return (mPads[idx].state.Gamepad.wButtons & buttonId) != 0;
 }
 

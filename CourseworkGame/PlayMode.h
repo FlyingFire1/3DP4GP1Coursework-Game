@@ -25,6 +25,9 @@ public:
 	void OnCollision(GameObj* collider) override;
 };
 
+
+class {};
+
 class PlayMode;
 class Score
 {
@@ -53,7 +56,7 @@ public:
 	void SetMode(PlayMode& pm) {
 		mpMyMode = &pm;
 	}
-	Score mScore;					//The player's score they get from 'roids
+	Score mScore;					//The player's score they get from asteroids
 	void AddScore(int amt);
 	void GivePowerUp(PowerUpType powerType);
 	void OnCollision(GameObj* collider) override;

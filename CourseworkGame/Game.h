@@ -46,6 +46,28 @@ private:
 	void HandleUIEvent(MenuNode& node, MenuNode::Event etype);
 };
 
+//start of the game
+class InfoMode : public AMode
+{
+public:
+	static const std::string MODE_NAME;
+	InfoMode();
+	void Update(float dTime) override;
+	void Render(float dTime, DirectX::SpriteBatch& batch) override;
+	std::string GetMName() const override {
+		return "INFO";
+	}
+	void ProcessKey(char key) override;
+	bool Exit() override;
+	void Enter() override;
+private:
+	Sprite mSpr;
+	float dpBlock = GetClock();
+	float dpBlockTime = 0.2f;
+	void HandleUIEvent(MenuNode& node, MenuNode::Event etype);
+};
+
+
 //end of the game
 class GameOverMode : public AMode
 {

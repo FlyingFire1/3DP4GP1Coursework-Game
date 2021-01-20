@@ -15,3 +15,4 @@ b1,b2 - what the buttons should have written on them
 b1Name,b2Name - this is the internal logical name for the buttons, so you cna hook up event handlers to them
 */
 void BuildTwoButtonUI(MenuMgr& mgr, MenuNode& root, float x, float y, const std::string& b1, const std::string& b1Name, const std::string& b2, const std::string& b2Name);
+void BuildThreeButtonUI(MenuMgr& mgr, MenuNode& root, float x, float y, const std::string& b1, const std::string& b1Name, const std::string& b2, const std::string& b2Name, const std::string& b3, const std::string& b3Name);

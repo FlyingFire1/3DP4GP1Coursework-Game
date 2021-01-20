@@ -21,6 +21,7 @@ Game::Game(MyD3D& d3d)
 	ConfigureUI();
 	mModeMgr.AddMode(new PlayMode());
 	mModeMgr.AddMode(new IntroMode());
+	mModeMgr.AddMode(new InfoMode());
 	mModeMgr.AddMode(new GameOverMode());
 	mModeMgr.SwitchMode(IntroMode::MODE_NAME);
 }
@@ -73,9 +74,11 @@ void Game::ConfigureUI()
 	mMenuMgr.LoadFont(L"data/fonts/comicSansMS.spritefont", "comicsans", 12);
 	//create an empty menu page for the intro UI
 	MenuNode& root = mMenuMgr.AddMenu("Intro", 512, 256);
-	BuildTwoButtonUI(mMenuMgr, root, 370, 120, "start", "start button", "quit", "quit button");
+	BuildThreeButtonUI(mMenuMgr, root, 370, 75, "Start", "start button", "Quit", "quit button", "Info", "info button");
 	MenuNode& root2 = mMenuMgr.AddMenu("GameOver", 512, 256);
-	BuildTwoButtonUI(mMenuMgr, root2, 370, 120, "restart", "restart button", "quit", "quit button");
+	BuildTwoButtonUI(mMenuMgr, root2, 370, 120, "Restart", "restart button", "Quit", "quit button");
+	MenuNode& root3 = mMenuMgr.AddMenu("Info", 512, 256);
+	BuildTwoButtonUI(mMenuMgr, root3, 370, 120, "Back", "restart button", "Quit", "back button");
 }
 
 
@@ -94,6 +97,7 @@ IntroMode::IntroMode()
 	MenuMgr& mgr = Game::Get().GetMenuMgr();
 	mgr.AddEventHandler("Intro", "quit button", MenuNode::Event::CLICK, h1);
 	mgr.AddEventHandler("Intro", "start button", MenuNode::Event::CLICK, h1);
+	mgr.AddEventHandler("Intro", "info button", MenuNode::Event::CLICK, h1);
 
 }
 void IntroMode::Update(float dTime)
@@ -105,16 +109,27 @@ void IntroMode::Update(float dTime)
 		//Get Menu Button
 		MenuButton* quit = dynamic_cast<MenuButton*>(&mgr.FindNode("Intro", "quit button"));
 		MenuButton* start = dynamic_cast<MenuButton*>(&mgr.FindNode("Intro", "start button"));
+		MenuButton* info = dynamic_cast<MenuButton*>(&mgr.FindNode("Intro", "info button"));
+
 		//DPAD Logic
 		if (start->gOver)
 		{
 			start->gOver = false;
 			quit->gOver = true;
 		}
+		else if (quit->gOver)
+		{
+			info->gOver = true;
+			quit->gOver = false;
+		}
+		else if (info->gOver)
+		{
+			info->gOver = false;
+			start->gOver = true;
+		}
 		else
 		{
 			start->gOver = true;
-			quit->gOver = false;
 		}
 		dpBlock = GetClock() + dpBlockTime;
 	}
@@ -123,16 +138,27 @@ void IntroMode::Update(float dTime)
 		//Get Menu Button
 		MenuButton* quit = dynamic_cast<MenuButton*>(&mgr.FindNode("Intro", "quit button"));
 		MenuButton* start = dynamic_cast<MenuButton*>(&mgr.FindNode("Intro", "start button"));
+		MenuButton* info = dynamic_cast<MenuButton*>(&mgr.FindNode("Intro", "info button"));
+
 		//DPAD Logic
 		if (start->gOver)
 		{
 			start->gOver = false;
+			info->gOver = true;
+		}
+		else if (quit->gOver)
+		{
+			start->gOver = true;
+			quit->gOver = false;
+		}
+		else if (info->gOver)
+		{
+			info->gOver = false;
 			quit->gOver = true;
 		}
 		else
 		{
 			start->gOver = true;
-			quit->gOver = false;
 		}
 		dpBlock = GetClock() + dpBlockTime;
 	}
@@ -162,6 +188,10 @@ void IntroMode::HandleUIEvent(MenuNode& node, MenuNode::Event etype)
 	{
 		PostQuitMessage(0);
 	}
+	else if (node.mName == "info button" && etype == MenuNode::Event::CLICK)
+	{
+		Game::Get().GetModeMgr().SwitchMode(InfoMode::MODE_NAME);
+	}
 	else if (node.mName == "start button" && etype == MenuNode::Event::CLICK)
 	{
 		Game::Get().GetModeMgr().SwitchMode(PlayMode::MODE_NAME);
@@ -177,6 +207,104 @@ bool IntroMode::Exit()
 void IntroMode::Enter()
 {
 	Game::Get().GetMenuMgr().ShowMenu("Intro");
+}
+
+//********************************************************************
+const std::string InfoMode::MODE_NAME = "INFO";
+
+InfoMode::InfoMode()
+	: mSpr(Game::Get().GetD3D())
+{
+	mSpr.SetTex(*Game::Get().GetD3D().GetCache().LoadTexture(&Game::Get().GetD3D().GetDevice(), "start1.dds", "start1"));
+	mSpr.SetScale(Vector2(WinUtil::Get().GetClientWidth() / mSpr.GetTexData().dim.x, WinUtil::Get().GetClientHeight() / mSpr.GetTexData().dim.y));
+
+	MenuMgr::Handler h1{ [this](MenuNode& node, MenuNode::Event etype) {HandleUIEvent(node, etype); } };
+	MenuMgr& mgr = Game::Get().GetMenuMgr();
+	mgr.AddEventHandler("Info", "back button", MenuNode::Event::CLICK, h1);
+	mgr.AddEventHandler("Info", "restart button", MenuNode::Event::CLICK, h1);
+
+}
+void InfoMode::Update(float dTime)
+{
+	MenuMgr& mgr = Game::Get().GetMenuMgr();
+
+	if (Game::Get().mGamepads.IsPressed(0, XINPUT_GAMEPAD_DPAD_DOWN) && dpBlock < GetClock())
+	{
+		//Get Menu Button
+		MenuButton* back = dynamic_cast<MenuButton*>(&mgr.FindNode("Info", "back button"));
+		MenuButton* restart = dynamic_cast<MenuButton*>(&mgr.FindNode("Info", "restart button"));
+		//DPAD Logic
+		if (restart->gOver)
+		{
+			restart->gOver = false;
+			back->gOver = true;
+		}
+		else
+		{
+			restart->gOver = true;
+			back->gOver = false;
+		}
+		dpBlock = GetClock() + dpBlockTime;
+	}
+	if (Game::Get().mGamepads.IsPressed(0, XINPUT_GAMEPAD_DPAD_UP) && dpBlock < GetClock())
+	{		
+		//Get Menu Button
+		MenuButton* quit = dynamic_cast<MenuButton*>(&mgr.FindNode("Info", "back button"));
+		MenuButton* restart = dynamic_cast<MenuButton*>(&mgr.FindNode("Info", "restart button"));
+		//DPAD Logic
+		if (restart->gOver)
+		{
+			restart->gOver = false;
+			quit->gOver = true;
+		}
+		else
+		{
+			restart->gOver = true;
+			quit->gOver = false;
+		}
+		dpBlock = GetClock() + dpBlockTime;
+	}
+}
+
+void InfoMode::Render(float dTime, DirectX::SpriteBatch& batch)
+{
+	mSpr.Draw(batch);
+}
+
+void InfoMode::ProcessKey(char key)
+{
+	switch (key)
+	{
+	case GC::SPACE:
+		Game::Get().GetModeMgr().SwitchMode(PlayMode::MODE_NAME);
+		break;
+	case GC::ESC:
+		PostQuitMessage(0);
+		break;
+	}
+}
+
+void InfoMode::HandleUIEvent(MenuNode& node, MenuNode::Event etype)
+{
+	if (node.mName == "back button" && etype == MenuNode::Event::CLICK)
+	{
+		PostQuitMessage(0);
+	}
+	else if (node.mName == "restart button" && etype == MenuNode::Event::CLICK)
+	{
+		Game::Get().GetModeMgr().SwitchMode(IntroMode::MODE_NAME);
+	}
+}
+
+bool InfoMode::Exit()
+{
+	Game::Get().GetMenuMgr().HideMenu();
+	return true;
+}
+
+void InfoMode::Enter()
+{
+	Game::Get().GetMenuMgr().ShowMenu("Info");
 }
 
 

@@ -109,8 +109,6 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <None Include="ClassDiagram_Menu.cd">
-      <Filter>Resource Files</Filter>
-    </None>
+    <None Include="ClassDiagram2.cd" />
   </ItemGroup>
 </Project>
