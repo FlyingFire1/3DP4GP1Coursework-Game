@@ -1,3 +1,6 @@
+#include <iostream>
+#include <fstream>
+
 #include "Game.h"
 #include "WindowUtils.h"
 #include "CommonStates.h"
@@ -58,6 +61,61 @@ void Game::Render(float dTime)
 
 	mD3D.EndRender();
 	mMKIn.PostProcess();
+}
+
+void Game::SaveScores(int score)
+{
+	
+	vector<int> save;
+	GetScores(save);
+
+	//popping lowest score, adding new score
+	for (auto& m : save) {
+		if (score > m) {
+			save.pop_back();
+			save.push_back(score);
+			break;
+		}
+	}
+
+	//lambda sort(high-low)
+	std::sort(save.begin(), save.end(), [](int a, int b) {
+		return a > b;
+		});
+
+	std::ofstream fileWrite("Scores.dat", std::ios::binary | std::ios::trunc);
+	fileWrite.write((char*)save.data(), save.size() * sizeof(int));
+	fileWrite.close();
+}
+
+void Game::GetScores(vector<int>& scores)
+{
+	std::ifstream fileRead("Scores.dat", std::ios::binary);
+	std::vector<int> load;
+	int temp;
+	while (fileRead.read((char*)&temp, sizeof(int)))
+		load.push_back(temp);
+	fileRead.close();
+
+	if (load.size() != 10)
+		CreateScoreFile(scores);
+	else
+		scores = load;
+
+}
+
+void Game::CreateScoreFile(vector<int>& scores)
+{
+	std::vector<int> save;
+	scores = save;
+	while (save.size() != 10)
+	{
+		save.push_back(0);
+	}
+	ofstream file("Scores.dat", std::ios::binary | std::ios::trunc);
+	file.write((char*)save.data(), save.size() * sizeof(int));
+	file.close();
+	scores = save;
 }
 
 
@@ -213,7 +271,7 @@ const std::string InfoMode::MODE_NAME = "INFO";
 InfoMode::InfoMode()
 	: mSpr(Game::Get().GetD3D())
 {
-	mSpr.SetTex(*Game::Get().GetD3D().GetCache().LoadTexture(&Game::Get().GetD3D().GetDevice(), "start1.dds", "start1"));
+	mSpr.SetTex(*Game::Get().GetD3D().GetCache().LoadTexture(&Game::Get().GetD3D().GetDevice(), "info.dds", "info"));
 	mSpr.SetScale(Vector2(WinUtil::Get().GetClientWidth() / mSpr.GetTexData().dim.x, WinUtil::Get().GetClientHeight() / mSpr.GetTexData().dim.y));
 
 	MenuMgr::Handler h1{ [this](MenuNode& node, MenuNode::Event etype) {HandleUIEvent(node, etype); } };

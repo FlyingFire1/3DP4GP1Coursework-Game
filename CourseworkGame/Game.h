@@ -111,6 +111,9 @@ public:
 	void ProcessKey(char key) {
 		mModeMgr.ProcessKey(key);
 	}
+	void SaveScores(int score);
+	void GetScores(std::vector<int>& scores);
+	void CreateScoreFile(std::vector<int>& scores);
 	//getters
 	MyD3D& GetD3D() { return mD3D; }
 	ModeMgr& GetModeMgr() { return mModeMgr; }

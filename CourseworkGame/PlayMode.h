@@ -25,9 +25,6 @@ public:
 	void OnCollision(GameObj* collider) override;
 };
 
-
-class {};
-
 class PlayMode;
 class Score
 {

@@ -420,6 +420,7 @@ void PlayMode::CheckCollisions()
 				FindFirst<Player>(typeid(Player), true)->AddScore(1);
 			}
 			if (CheckForCollision(*a, *p)) {
+				Game::Get().SaveScores(FindFirst<Player>(typeid(Player), true)->mScore.GetScore());
 				Game::Get().GetModeMgr().SwitchMode(GameOverMode::MODE_NAME);
 				Initalise();
 			}
