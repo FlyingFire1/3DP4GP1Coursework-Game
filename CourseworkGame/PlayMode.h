@@ -158,6 +158,9 @@ public:
 	Remove and delete the specified object from the mObjects array
 	*/
 	void Remove(GameObj*& pObj);
+
+	bool Exit() override;
+
 	/*
 	Given the type of the object and whether it should be active or inactive
 	find the first matching object in the mObjects array

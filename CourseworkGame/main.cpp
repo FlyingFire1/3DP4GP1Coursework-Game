@@ -7,6 +7,8 @@
 #include "WindowUtils.h"
 #include "Game.h"
 
+
+
 using namespace std;
 using namespace DirectX;
 using namespace DirectX::SimpleMath;
@@ -52,7 +54,10 @@ LRESULT CALLBACK MainWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 //main entry point for the game
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE prevInstance,
 				   PSTR cmdLine, int showCmd)
-{
+{	
+	
+	File::initialiseSystem();
+
 	int w(1024), h(768);
 	//int defaults[] = { 640,480, 800,600, 1024,768, 1280,1024 };
 		//WinUtil::ChooseRes(w, h, defaults, 4);
@@ -65,6 +70,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE prevInstance,
 	d3d.GetCache().SetAssetPath("data/");
 	WinUtil::Get().SetD3D(d3d);
 	new Game(d3d);
+
 
 	bool canUpdateRender;
 	float dTime = 0;

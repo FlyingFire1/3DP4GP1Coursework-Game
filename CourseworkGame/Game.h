@@ -12,6 +12,8 @@
 #include "ModeMgr.h"
 #include "MenuMgr.h"
 
+#include "AudioMgrFMOD.h"
+
 namespace GC {
 	const int ESC = 27;
 	const int SPACE = 32;
@@ -137,7 +139,8 @@ public:
 	MyD3D& GetD3D() { return mD3D; }
 	ModeMgr& GetModeMgr() { return mModeMgr; }
 	MenuMgr& GetMenuMgr() { return mMenuMgr; }
-	
+	AudioMgrFMOD audio;
+	bool impossibleMode = true;
 private:
 	MyD3D& mD3D;	//main access point to D3D
 	DirectX::SpriteBatch *mpSB = nullptr;	//for sprite rendering

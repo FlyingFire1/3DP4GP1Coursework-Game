@@ -29,6 +29,8 @@ public:
 	virtual std::string GetMName() const = 0;
 	//pass WM_CHAR key messages to a mode
 	virtual void ProcessKey(char key) {};
+
+	unsigned int musicHndl;
 };
 
 /*

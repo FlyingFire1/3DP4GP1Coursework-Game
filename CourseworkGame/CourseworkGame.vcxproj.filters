@@ -22,6 +22,9 @@
     <Filter Include="Menu">
       <UniqueIdentifier>{7f76b99a-afde-492a-8328-f91a1e99a59e}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Audio">
+      <UniqueIdentifier>{496550a4-3969-4ede-8b29-218a4299f977}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="D3D.cpp">
@@ -62,6 +65,15 @@
     </ClCompile>
     <ClCompile Include="UIConfig.cpp">
       <Filter>Menu</Filter>
+    </ClCompile>
+    <ClCompile Include="AudioMgrFMOD.cpp">
+      <Filter>Audio</Filter>
+    </ClCompile>
+    <ClCompile Include="FileUtils.cpp">
+      <Filter>Audio</Filter>
+    </ClCompile>
+    <ClCompile Include="AudioMgr.cpp">
+      <Filter>Audio</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -106,6 +118,15 @@
     </ClInclude>
     <ClInclude Include="UIConfig.h">
       <Filter>Menu</Filter>
+    </ClInclude>
+    <ClInclude Include="AudioMgrFMOD.h">
+      <Filter>Audio</Filter>
+    </ClInclude>
+    <ClInclude Include="FileUtils.h">
+      <Filter>Audio</Filter>
+    </ClInclude>
+    <ClInclude Include="AudioMgr.h">
+      <Filter>Audio</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

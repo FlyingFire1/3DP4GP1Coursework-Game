@@ -216,6 +216,8 @@ void Player::Reset()
 //Fire bullet from player
 void Player::FireBullet(float relpos)
 {
+	unsigned int musicHndl;
+	Game::Get().audio.GetSfxMgr()->Play("smallExplosion", false, false, &musicHndl, 0.2f);
 	Bullet* pM = mpMyMode->FindFirst<Bullet>(typeid(Bullet), false);
 	if (pM) {
 		pM->mActive = true;
@@ -513,8 +515,8 @@ void PlayMode::UpdateRoids(float dTime)
 			mLastSpawnAsteroid = GetClock();
 
 		//Increase Difficulty gradually by spawning more asteroids as time goes on
-		if (!((mSpawnRateSecAsteroid - 0.05f) < 0.2f))
-			mSpawnRateSecAsteroid -= 0.005f;
+		if (!((mSpawnRateSecAsteroid - 0.05f) < 0.2f) || Game::Get().impossibleMode)
+			mSpawnRateSecAsteroid -= 0.01f;
 		else
 			mSpawnRateSecAsteroid = 0.2f;
 	}
@@ -611,6 +613,10 @@ void PlayMode::UpdateBgnd(float dTime)
 
 void PlayMode::Update(float dTime)
 {
+	Game::Get().audio.Update();
+
+	if (!Game::Get().audio.GetSongMgr()->IsPlaying(musicHndl))
+		Game::Get().audio.GetSongMgr()->Play("boss", true, false, &musicHndl, 0.2f);
 	UpdateBgnd(dTime);
 
 	CheckCollisions();
@@ -679,6 +685,13 @@ void PlayMode::Remove(GameObj*& pObj) {
 	assert(sz != mObjects.size());
 	delete pObj;
 	pObj = nullptr;
+}
+
+bool PlayMode::Exit()
+{
+	Game::Get().GetMenuMgr().HideMenu();
+	Game::Get().audio.GetSongMgr()->Stop(musicHndl);
+	return true;
 }
 
 template<class ObjectType>

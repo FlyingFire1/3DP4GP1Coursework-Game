@@ -22,6 +22,9 @@ Game::Game(MyD3D& d3d)
 	mGamepads.Initialise();
 	mpSB = new SpriteBatch(&mD3D.GetDeviceCtx());
 	ConfigureUI();
+	audio.Initialise();
+	audio.GetSongMgr()->Load("music");
+	audio.GetSfxMgr()->Load("sfx");
 	mModeMgr.AddMode(new PlayMode());
 	mModeMgr.AddMode(new IntroMode());
 	mModeMgr.AddMode(new InfoMode());
@@ -173,6 +176,10 @@ IntroMode::IntroMode()
 void IntroMode::Update(float dTime)
 {
 	MenuMgr& mgr = Game::Get().GetMenuMgr();
+	Game::Get().audio.Update();
+
+	if (!Game::Get().audio.GetSongMgr()->IsPlaying(musicHndl))
+		Game::Get().audio.GetSongMgr()->Play("credits", true, false, &musicHndl, 0.2f);
 
 	if (Game::Get().mGamepads.IsPressed(0, XINPUT_GAMEPAD_DPAD_DOWN) && dpBlock < GetClock())
 	{
@@ -269,6 +276,7 @@ void IntroMode::HandleUIEvent(MenuNode& node, MenuNode::Event etype)
 bool IntroMode::Exit()
 {
 	Game::Get().GetMenuMgr().HideMenu();
+	Game::Get().audio.GetSongMgr()->Stop(musicHndl);
 	return true;
 }
 
@@ -295,6 +303,11 @@ InfoMode::InfoMode()
 void InfoMode::Update(float dTime)
 {
 	MenuMgr& mgr = Game::Get().GetMenuMgr();
+
+	Game::Get().audio.Update();
+
+	if (!Game::Get().audio.GetSongMgr()->IsPlaying(musicHndl))
+		Game::Get().audio.GetSongMgr()->Play("credits", true, false, &musicHndl, 0.2f);
 
 	if (Game::Get().mGamepads.IsPressed(0, XINPUT_GAMEPAD_DPAD_DOWN) && dpBlock < GetClock())
 	{
@@ -367,6 +380,7 @@ void InfoMode::HandleUIEvent(MenuNode& node, MenuNode::Event etype)
 bool InfoMode::Exit()
 {
 	Game::Get().GetMenuMgr().HideMenu();
+	Game::Get().audio.GetSongMgr()->Stop(musicHndl);
 	return true;
 }
 
@@ -391,7 +405,10 @@ LeaderboardMode::LeaderboardMode()
 void LeaderboardMode::Update(float dTime)
 {
 	MenuMgr& mgr = Game::Get().GetMenuMgr();
+	Game::Get().audio.Update();
 
+	if (!Game::Get().audio.GetSongMgr()->IsPlaying(musicHndl))
+		Game::Get().audio.GetSongMgr()->Play("credits", true, false, &musicHndl, 0.2f);
 	if (Game::Get().mGamepads.IsPressed(0, XINPUT_GAMEPAD_DPAD_DOWN) && dpBlock < GetClock())
 	{
 		//Get Menu Button
@@ -442,6 +459,7 @@ void LeaderboardMode::HandleUIEvent(MenuNode& node, MenuNode::Event etype)
 bool LeaderboardMode::Exit()
 {
 	Game::Get().GetMenuMgr().HideMenu();
+	Game::Get().audio.GetSongMgr()->Stop(musicHndl);
 	return true;
 }
 
@@ -485,6 +503,10 @@ GameOverMode::GameOverMode()
 void GameOverMode::Update(float dTime)
 {
 	MenuMgr& mgr = Game::Get().GetMenuMgr();
+	Game::Get().audio.Update();
+
+	if (!Game::Get().audio.GetSongMgr()->IsPlaying(musicHndl))
+		Game::Get().audio.GetSongMgr()->Play("silence", true, false, &musicHndl, 0.2f);
 
 	if (Game::Get().mGamepads.IsPressed(0, XINPUT_GAMEPAD_DPAD_DOWN) && dpBlock < GetClock())
 	{
@@ -581,6 +603,7 @@ void GameOverMode::HandleUIEvent(MenuNode& node, MenuNode::Event etype)
 bool GameOverMode::Exit()
 {
 	Game::Get().GetMenuMgr().HideMenu();
+	Game::Get().audio.GetSongMgr()->Stop(musicHndl);
 	return true;
 }
 
