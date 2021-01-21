@@ -25,6 +25,7 @@ Game::Game(MyD3D& d3d)
 	mModeMgr.AddMode(new PlayMode());
 	mModeMgr.AddMode(new IntroMode());
 	mModeMgr.AddMode(new InfoMode());
+	mModeMgr.AddMode(new LeaderboardMode());
 	mModeMgr.AddMode(new GameOverMode());
 	mModeMgr.SwitchMode(IntroMode::MODE_NAME);
 }
@@ -84,7 +85,7 @@ void Game::SaveScores(int score)
 		});
 
 	std::ofstream fileWrite("Scores.dat", std::ios::binary | std::ios::trunc);
-	fileWrite.write((char*)save.data(), save.size() * sizeof(int));
+	fileWrite.write((char*)save.data(), save.size() * sizeof(int)); //writing a binary the size of the content vector points too
 	fileWrite.close();
 }
 
@@ -93,10 +94,13 @@ void Game::GetScores(vector<int>& scores)
 	std::ifstream fileRead("Scores.dat", std::ios::binary);
 	std::vector<int> load;
 	int temp;
+
+	//read file while there are ints left
 	while (fileRead.read((char*)&temp, sizeof(int)))
 		load.push_back(temp);
 	fileRead.close();
 
+	//if there isn't 10 scores in file, make a file with 10 scores
 	if (load.size() != 10)
 		CreateScoreFile(scores);
 	else
@@ -108,12 +112,18 @@ void Game::CreateScoreFile(vector<int>& scores)
 {
 	std::vector<int> save;
 	scores = save;
+	if (save.size() < 10)
+	{
+		std::vector<int> save2;
+		save2.insert(save2.begin(), 10, 0);
+		save = save2;
+	}
 	while (save.size() != 10)
 	{
 		save.push_back(0);
 	}
 	ofstream file("Scores.dat", std::ios::binary | std::ios::trunc);
-	file.write((char*)save.data(), save.size() * sizeof(int));
+	file.write((char*)save.data(), save.size() * sizeof(int)); //writing a binary the size of the content vector points too
 	file.close();
 	scores = save;
 }
@@ -134,9 +144,11 @@ void Game::ConfigureUI()
 	MenuNode& root = mMenuMgr.AddMenu("Intro", 512, 256);
 	BuildThreeButtonUI(mMenuMgr, root, 370, 75, "Start", "start button", "Quit", "quit button", "Info", "info button");
 	MenuNode& root2 = mMenuMgr.AddMenu("GameOver", 512, 256);
-	BuildTwoButtonUI(mMenuMgr, root2, 370, 120, "Restart", "restart button", "Quit", "quit button");
+	BuildThreeButtonUI(mMenuMgr, root2, 370, 75, "Restart", "restart button", "Quit", "quit button", "Leaderboards", "leaderboard button");
 	MenuNode& root3 = mMenuMgr.AddMenu("Info", 512, 256);
 	BuildTwoButtonUI(mMenuMgr, root3, 370, 120, "Back", "restart button", "Quit", "back button");
+	MenuNode& root4 = mMenuMgr.AddMenu("Leaderboard", 512, 256);
+	BuildLeaderBoard(mMenuMgr, root4, 200, 50, "Back", "back button");
 }
 
 
@@ -363,6 +375,95 @@ void InfoMode::Enter()
 	Game::Get().GetMenuMgr().ShowMenu("Info");
 }
 
+//********************************************************************
+const std::string LeaderboardMode::MODE_NAME = "LEADERBOARD";
+
+LeaderboardMode::LeaderboardMode()
+	: mSpr(Game::Get().GetD3D())
+{
+	mSpr.SetTex(*Game::Get().GetD3D().GetCache().LoadTexture(&Game::Get().GetD3D().GetDevice(), "start1.dds", "start"));
+	mSpr.SetScale(Vector2(WinUtil::Get().GetClientWidth() / mSpr.GetTexData().dim.x, WinUtil::Get().GetClientHeight() / mSpr.GetTexData().dim.y));
+
+	MenuMgr::Handler h1{ [this](MenuNode& node, MenuNode::Event etype) {HandleUIEvent(node, etype); } };
+	MenuMgr& mgr = Game::Get().GetMenuMgr();
+	mgr.AddEventHandler("Leaderboard", "back button", MenuNode::Event::CLICK, h1);
+}
+void LeaderboardMode::Update(float dTime)
+{
+	MenuMgr& mgr = Game::Get().GetMenuMgr();
+
+	if (Game::Get().mGamepads.IsPressed(0, XINPUT_GAMEPAD_DPAD_DOWN) && dpBlock < GetClock())
+	{
+		//Get Menu Button
+		MenuButton* back = dynamic_cast<MenuButton*>(&mgr.FindNode("Leaderboard", "back button"));
+		//DPAD Logic
+		back->gOver = true;
+
+		dpBlock = GetClock() + dpBlockTime;
+	}
+	if (Game::Get().mGamepads.IsPressed(0, XINPUT_GAMEPAD_DPAD_UP) && dpBlock < GetClock())
+	{
+		//Get Menu Button
+		MenuButton* back = dynamic_cast<MenuButton*>(&mgr.FindNode("Leaderboard", "back button"));
+		//DPAD Logic
+		back->gOver = true;
+
+		dpBlock = GetClock() + dpBlockTime;
+	}
+}
+
+void LeaderboardMode::Render(float dTime, DirectX::SpriteBatch& batch)
+{
+	mSpr.Draw(batch);
+}
+
+void LeaderboardMode::ProcessKey(char key)
+{
+	switch (key)
+	{
+	case GC::SPACE:
+		Game::Get().GetModeMgr().SwitchMode(PlayMode::MODE_NAME);
+		break;
+	case GC::ESC:
+		PostQuitMessage(0);
+		break;
+	}
+}
+
+void LeaderboardMode::HandleUIEvent(MenuNode& node, MenuNode::Event etype)
+{
+	if (node.mName == "back button" && etype == MenuNode::Event::CLICK)
+	{
+		Game::Get().GetModeMgr().SwitchMode(GameOverMode::MODE_NAME);
+	}
+
+}
+
+bool LeaderboardMode::Exit()
+{
+	Game::Get().GetMenuMgr().HideMenu();
+	return true;
+}
+
+void LeaderboardMode::Enter()
+{
+	Game::Get().GetMenuMgr().ShowMenu("Leaderboard");
+	MenuMgr& mgr = Game::Get().GetMenuMgr();
+	vector<int> scores;
+	Game::Get().GetScores(scores);
+	int n = 0;
+	for (int& s : scores)
+	{
+		char i[20];
+		sprintf(i, "n%d text", n);
+		string l = i;
+		sprintf(i, "%d", s);
+		string k = i;
+		MenuText* text = dynamic_cast<MenuText*>(&mgr.FindNode("Leaderboard", l));
+		text->mText = k;
+		n++;
+	}
+}
 
 
 //********************************************************************
@@ -379,6 +480,7 @@ GameOverMode::GameOverMode()
 	MenuMgr& mgr = Game::Get().GetMenuMgr();
 	mgr.AddEventHandler("GameOver", "quit button", MenuNode::Event::CLICK, h1);
 	mgr.AddEventHandler("GameOver", "restart button", MenuNode::Event::CLICK, h1);
+	mgr.AddEventHandler("GameOver", "leaderboard button", MenuNode::Event::CLICK, h1);
 }
 void GameOverMode::Update(float dTime)
 {
@@ -389,16 +491,26 @@ void GameOverMode::Update(float dTime)
 		//Get Menu Button
 		MenuButton* quit = dynamic_cast<MenuButton*>(&mgr.FindNode("GameOver", "quit button"));
 		MenuButton* start = dynamic_cast<MenuButton*>(&mgr.FindNode("GameOver", "restart button"));
+		MenuButton* leaderboard = dynamic_cast<MenuButton*>(&mgr.FindNode("GameOver", "leaderboard button"));
 		//DPAD Logic
 		if (start->gOver)
 		{
 			start->gOver = false;
 			quit->gOver = true;
 		}
+		else if (quit->gOver)
+		{
+			leaderboard->gOver = true;
+			quit->gOver = false;
+		}
+		else if (leaderboard->gOver)
+		{
+			start->gOver = true;
+			leaderboard->gOver = false;
+		}
 		else
 		{
 			start->gOver = true;
-			quit->gOver = false;
 		}
 		dpBlock = GetClock() + dpBlockTime;
 	}
@@ -407,16 +519,26 @@ void GameOverMode::Update(float dTime)
 		//Get Menu Button
 		MenuButton* quit = dynamic_cast<MenuButton*>(&mgr.FindNode("GameOver", "quit button"));
 		MenuButton* start = dynamic_cast<MenuButton*>(&mgr.FindNode("GameOver", "restart button"));
+		MenuButton* leaderboard = dynamic_cast<MenuButton*>(&mgr.FindNode("GameOver", "leaderboard button"));
 		//DPAD Logic
 		if (start->gOver)
 		{
 			start->gOver = false;
+			leaderboard->gOver = true;
+		}
+		else if(quit->gOver)
+		{
+			start->gOver = true;
+			quit->gOver = false;
+		}
+		else if (leaderboard->gOver)
+		{
 			quit->gOver = true;
+			leaderboard->gOver = false;
 		}
 		else
 		{
 			start->gOver = true;
-			quit->gOver = false;
 		}
 		dpBlock = GetClock() + dpBlockTime;
 	}
@@ -449,6 +571,10 @@ void GameOverMode::HandleUIEvent(MenuNode& node, MenuNode::Event etype)
 	else if (node.mName == "restart button" && etype == MenuNode::Event::CLICK)
 	{
 		Game::Get().GetModeMgr().SwitchMode(IntroMode::MODE_NAME);
+	}	
+	else if (node.mName == "leaderboard button" && etype == MenuNode::Event::CLICK)
+	{
+		Game::Get().GetModeMgr().SwitchMode(LeaderboardMode::MODE_NAME);
 	}
 }
 

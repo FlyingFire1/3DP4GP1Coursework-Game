@@ -4,6 +4,8 @@
 #include "MenuMgr.h"
 
 
+class MenuButton;
+class MenuImage;
 /*
 Creates a small window frame with two buttons in it
 The code to configure the elements is long and cumbersome so 
@@ -16,3 +18,5 @@ b1Name,b2Name - this is the internal logical name for the buttons, so you cna ho
 */
 void BuildTwoButtonUI(MenuMgr& mgr, MenuNode& root, float x, float y, const std::string& b1, const std::string& b1Name, const std::string& b2, const std::string& b2Name);
 void BuildThreeButtonUI(MenuMgr& mgr, MenuNode& root, float x, float y, const std::string& b1, const std::string& b1Name, const std::string& b2, const std::string& b2Name, const std::string& b3, const std::string& b3Name);
+void BuildLeaderBoard(MenuMgr& mgr, MenuNode& root, float x, float y, const std::string& b1, const std::string& b1Name);
+void GenericButtonSetup(MenuButton* pB3, MenuImage* pIm, const std::string& b1Name, int x, int y, int w, int h);

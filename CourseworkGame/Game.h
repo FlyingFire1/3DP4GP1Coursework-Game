@@ -67,6 +67,25 @@ private:
 	void HandleUIEvent(MenuNode& node, MenuNode::Event etype);
 };
 
+class LeaderboardMode : public AMode
+{
+public:
+	static const std::string MODE_NAME;
+	LeaderboardMode();
+	void Update(float dTime) override;
+	void Render(float dTime, DirectX::SpriteBatch& batch) override;
+	std::string GetMName() const override {
+		return "LEADERBOARD";
+	}
+	void ProcessKey(char key) override;
+	bool Exit() override;
+	void Enter() override;
+private:
+	Sprite mSpr;
+	float dpBlock = GetClock();
+	float dpBlockTime = 0.2f;
+	void HandleUIEvent(MenuNode& node, MenuNode::Event etype);
+};
 
 //end of the game
 class GameOverMode : public AMode
